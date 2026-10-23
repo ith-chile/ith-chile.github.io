@@ -34,6 +34,7 @@
   --ease:cubic-bezier(.2,.7,.1,1);
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{min-height:100%}
 body{margin:0;background:var(--stage);color:var(--fg);font:400 15px/1.55 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
@@ -59,7 +60,7 @@ body{margin:0;background:var(--stage);color:var(--fg);font:400 15px/1.55 var(--b
 /* flip card */
 .scene{}
 .flipper{display:block}
-.face{border-radius:22px;transform-origin:50% 30%;overflow:hidden;
+.face{border-radius:22px;transform-origin:50% 50%;overflow:hidden;
   background:var(--surface);border:1px solid var(--line);
   box-shadow:0 30px 60px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.02) inset}
 .back{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:36px 24px;text-align:center;
@@ -297,10 +298,10 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
 .inapp{margin:12px 22px 0;padding:10px 12px;border-radius:12px;background:rgba(201,138,26,.14);border:1px solid rgba(201,138,26,.45);color:#f3d9a6;font-size:13px;line-height:1.45}
 
 /* iOS Safari ignores backface-visibility when children have their own layers: swap faces at mid-flip */
-.face.fold-out{animation:foldOut .22s cubic-bezier(.5,0,.9,.4) forwards}
-.face.fold-in{animation:foldIn .34s var(--ease) both}
-@keyframes foldOut{to{transform:scaleX(0) scaleY(.96);filter:brightness(.6)}}
-@keyframes foldIn{from{transform:scaleX(0) scaleY(.96);filter:brightness(.6)}to{transform:none;filter:none}}
+.face.fold-out{animation:foldOut .3s cubic-bezier(.55,0,.9,.45) forwards}
+.face.fold-in{animation:foldIn .45s cubic-bezier(.15,.7,.2,1) both}
+@keyframes foldOut{from{transform:perspective(1400px) rotateY(0)}to{transform:perspective(1400px) rotateY(90deg);filter:brightness(.55)}}
+@keyframes foldIn{from{transform:perspective(1400px) rotateY(-90deg);filter:brightness(.55)}to{transform:perspective(1400px) rotateY(0);filter:none}}
 </style>
 </head>
 <body>
