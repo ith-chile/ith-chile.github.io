@@ -297,6 +297,11 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
 .chip span.pressing{transform:scale(.94)}
 .list a{display:inline-block;padding:8px 0}
 .inapp{margin:12px 22px 0;padding:10px 12px;border-radius:12px;background:rgba(201,138,26,.14);border:1px solid rgba(201,138,26,.45);color:#f3d9a6;font-size:13px;line-height:1.45}
+
+/* iOS Safari ignores backface-visibility when children have their own layers: swap faces at mid-flip */
+.flipper{-webkit-transform-style:preserve-3d}
+.face{transition:visibility 0s linear .42s}
+.flipper.flipped .front,.flipper:not(.flipped) .back{visibility:hidden}
 </style>
 </head>
 <body>
@@ -523,10 +528,10 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
   // flip to QR
   var flipper=document.getElementById('flipper'), front=document.getElementById('front'), back=document.getElementById('back');
   function flip(on){
+    window.scrollTo(0,0);
     flipper.classList.toggle('flipped', on);
     var dk=document.getElementById('dock'); if(dk) dk.classList.toggle('hide', on);
     back.setAttribute('aria-hidden', !on); front.setAttribute('aria-hidden', on);
-    window.scrollTo({top:0, behavior: reduce?'auto':'smooth'});
   }
   document.getElementById('showqr').addEventListener('click', function(){ flip(true); });
   document.getElementById('hideqr').addEventListener('click', function(){ flip(false); });
