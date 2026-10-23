@@ -57,13 +57,12 @@ body{margin:0;background:var(--stage);color:var(--fg);font:400 15px/1.55 var(--b
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 /* flip card */
-.scene{perspective:1600px}
-.flipper{display:grid;transform-style:preserve-3d;transition:transform .9s var(--ease)}
-.flipper.flipped{transform:rotateY(180deg)}
-.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:22px;overflow:hidden;
+.scene{}
+.flipper{display:block}
+.face{border-radius:22px;transform-origin:50% 30%;overflow:hidden;
   background:var(--surface);border:1px solid var(--line);
   box-shadow:0 30px 60px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.02) inset}
-.back{transform:rotateY(180deg);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:36px 24px;text-align:center;
+.back{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:36px 24px;text-align:center;
   background:radial-gradient(500px 300px at 50% 0%,rgba(47,123,242,.25),transparent 70%),var(--surface)}
 .tilt{transition:transform .4s var(--ease);will-change:transform}
 
@@ -177,9 +176,9 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
 .intro .fill{fill:none;stroke:url(#gg);stroke-width:8;stroke-linecap:round;stroke-dasharray:0 999}
 .intro .nd{stroke:var(--fg);stroke-width:3;stroke-linecap:round;transform-origin:100px 100px;transform:rotate(-90deg)}
 .intro .hub{fill:var(--fg)}
-.intro .num{position:absolute;left:0;right:0;bottom:-6px;text-align:center;font:800 34px/1 var(--display);font-stretch:80%;font-variant-numeric:tabular-nums}
+.intro .num{position:absolute;left:0;right:0;top:100%;margin-top:10px;text-align:center;font:800 34px/1 var(--display);font-stretch:80%;font-variant-numeric:tabular-nums}
 .intro .num small{font:600 12px var(--mono);color:var(--muted);letter-spacing:.1em;margin-left:4px}
-.intro p{margin:18px 0 0;font:600 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.intro p{margin:58px 0 0;font:600 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .intro p.ok{color:#3ddc84}
 .intro .skip{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:12px;color:#5c7896}
 
@@ -286,7 +285,6 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
 
 /* ---------- touch & press ---------- */
 .btn,.copy,.diag,.chip,.chip span,.list a{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.flipper:not(.flipped) .back,.flipper.flipped .front{pointer-events:none}
 .btn{min-height:52px}
 .btn.primary{min-height:60px}
 .row3 .btn{min-height:80px}
@@ -299,9 +297,10 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
 .inapp{margin:12px 22px 0;padding:10px 12px;border-radius:12px;background:rgba(201,138,26,.14);border:1px solid rgba(201,138,26,.45);color:#f3d9a6;font-size:13px;line-height:1.45}
 
 /* iOS Safari ignores backface-visibility when children have their own layers: swap faces at mid-flip */
-.flipper{-webkit-transform-style:preserve-3d}
-.face{transition:visibility 0s linear .42s}
-.flipper.flipped .front,.flipper:not(.flipped) .back{visibility:hidden}
+.face.fold-out{animation:foldOut .22s cubic-bezier(.5,0,.9,.4) forwards}
+.face.fold-in{animation:foldIn .34s var(--ease) both}
+@keyframes foldOut{to{transform:scaleX(0) scaleY(.96);filter:brightness(.6)}}
+@keyframes foldIn{from{transform:scaleX(0) scaleY(.96);filter:brightness(.6)}to{transform:none;filter:none}}
 </style>
 </head>
 <body>
@@ -433,7 +432,7 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
    </article>
 
    <!-- BACK -->
-   <article class="face back" id="back" aria-label="Código QR" aria-hidden="true">
+   <article class="face back" id="back" aria-label="Código QR" aria-hidden="true" hidden>
      <div class="logo"><img src="assets/logo.jpg" alt="ITH" width="510" height="305"></div>
      <h3>Escanea y guárdame</h3>
      <div class="qrbox"><div class="beam"></div><img src="assets/qr-contacto.png" alt="Código QR con el contacto de Eduardo Amigo Ferrari" width="240" height="240"></div>
@@ -527,11 +526,24 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
 
   // flip to QR
   var flipper=document.getElementById('flipper'), front=document.getElementById('front'), back=document.getElementById('back');
+  var flipping=false;
   function flip(on){
-    window.scrollTo(0,0);
-    flipper.classList.toggle('flipped', on);
+    if (flipping || flipper.classList.contains('flipped')===on) return;
+    var out=on?front:back, inn=on?back:front;
+    function swap(){
+      out.classList.remove('fold-out'); out.hidden=true;
+      flipper.classList.toggle('flipped', on);
+      inn.hidden=false; window.scrollTo(0,0);
+      if(!reduce){ inn.classList.add('fold-in'); inn.addEventListener('animationend',function h(){ inn.classList.remove('fold-in'); inn.removeEventListener('animationend',h); flipping=false; }); }
+      else flipping=false;
+    }
     var dk=document.getElementById('dock'); if(dk) dk.classList.toggle('hide', on);
     back.setAttribute('aria-hidden', !on); front.setAttribute('aria-hidden', on);
+    flipping=true;
+    if(reduce){ swap(); return; }
+    out.classList.add('fold-out');
+    out.addEventListener('animationend',function h(){ out.removeEventListener('animationend',h); swap(); });
+    setTimeout(function(){ if(flipping && !out.hidden) swap(); }, 600);
   }
   document.getElementById('showqr').addEventListener('click', function(){ flip(true); });
   document.getElementById('hideqr').addEventListener('click', function(){ flip(false); });
@@ -624,10 +636,8 @@ h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--li
   // sticky dock when the main button leaves the screen
   var dock=document.getElementById('dock'), save=document.getElementById('save');
   document.getElementById('dockqr').addEventListener('click', function(){ flip(true); });
-  if ('IntersectionObserver' in window){
-    new IntersectionObserver(function(es){ var off=!es[0].isIntersecting && es[0].boundingClientRect.top<0;
-      dock.classList.toggle('show', off && !flipper.classList.contains('flipped')); }).observe(save);
-  }
+  function dockCheck(){ var r=save.getBoundingClientRect(); dock.classList.toggle('show', r.height>0 && r.bottom<0 && !flipper.classList.contains('flipped')); }
+  addEventListener('scroll', dockCheck, {passive:true}); addEventListener('resize', dockCheck);
 
 
   // ---- solicitar diagnóstico ----
